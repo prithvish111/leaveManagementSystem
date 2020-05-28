@@ -16,6 +16,7 @@
 using namespace std;
 void recover(char* , char*);
 float getSal(string );
+int hashed(char , char, int);
 class Employee
 {
 	public :
@@ -65,10 +66,28 @@ void addUser()
 	file1.close();
 	file2.close();
 	file3.close();
+	int index = hashed(e.ssn[0],e.ssn[1],1);
 
 	cout<<s4<<"User added successfully!"<<nl<<nl<<nl;
 }
-
+int hashed(char ch1, char ch2, int n)
+{
+	fstream file1;
+	cout<<s4;
+	for(int i=0;i<50;i++){
+		cout<<".";
+	}
+	if(n==1)
+	cout<<"Storing data at hash index "<<(ch1 + ch2)%100;
+	else
+		cout<<"Retrieving data from hash index "<<(ch1 + ch2)%100;
+	
+	for(int i=0;i<50;i++){
+		cout<<".";
+	}
+	cout<<endl;
+	return (ch1+ch2)%100;
+}
 void modUser()
 {
 	char ch;
@@ -214,7 +233,7 @@ void modLeave()
 		else{
 			index+=100;
 			str.clear();
-			count--;
+			count++;
 		}
 	}
 	file1.close();
@@ -230,11 +249,13 @@ void modLeave()
 		cout<<s4<<"4. PARENTAL LEAVE"<<nl<<nl;
 		cout<<s4<<cyp;
 		cin>>ch;
+		if(ch==0 || ch>4)
+			goto start;
 		cout<<nl;
-		if(ch==1){ beg=0,end=3,tot=20,per=.08; }
-		else if(ch==2){ beg=1,end=2,tot=15,per=0.05;}
-		else if(ch==3){ beg=2,end=1,tot=10,per=0.03;}
-		else if(ch==4){ beg=3,end=0,tot=40,per=0.15;}
+		if(ch==1){ beg=0,end=3,tot=20,per=0.025; }
+		else if(ch==2){ beg=1,end=2,tot=15,per=0.025;}
+		else if(ch==3){ beg=2,end=1,tot=10,per=0.025;}
+		else if(ch==4){ beg=3,end=0,tot=40,per=0.025;}
 		file1.open("leave.txt",ios::binary|ios::in);
 		file2.open("temp1.txt",ios::binary|ios::app);
 		while(count--){
@@ -251,6 +272,11 @@ void modLeave()
 		}
 		cout<<s4<<"Enter the number of leaves : ";
 		cin>>nol;
+		while(nol>tot){
+			cout<<s4<<"Cannot apply more than "<<tot<<" leaves"<<nl;
+			cout<<s4<<"Enter the number of leaves : ";
+			cin>>nol;
+		}
 		getline(file1,str,'|');
 		stringstream buf1(str);
 		buf1>>lea;
@@ -278,11 +304,11 @@ void modLeave()
 		sal=getSal(id);
 
 		if(leave-nol<0)
-		sal=sal-(float)sal*per*abs(tot-leave);
+		sal-=(float)sal*per*abs(leave-nol);
 		
 		ostringstream buf4;
 		buf4<<sal;
-		str=buf4.str();;
+		str=buf4.str();
 		str.resize(8);
 		file2<<str<<"|";
 
@@ -366,7 +392,7 @@ void deleteLeave()
 		else{
 			index+=100;
 			str.clear();
-			count=count+1;
+			count++;
 		}
 	}
 	file1.close();
@@ -374,12 +400,9 @@ void deleteLeave()
 	{
 		file1.open("leave.txt",ios::binary|ios::in);
 		file2.open("temp1.txt",ios::binary|ios::app);
-		while(count>0){
+		while(count--){
 			getline(file1,str);
-			file2<<str;
-			count=count-1;
-			if(count>0)
-			file2<<nl;
+			file2<<str<<endl;
 		}
 		for(int i=0;i<2;i++){
 			getline(file1,str,'|');
@@ -401,7 +424,7 @@ void deleteLeave()
 		file2<<str<<"|";
 		str="-";str.resize(10);
 		file2<<str<<"|"<<str<<"|";
-		str="0";str.resize(10);
+		str="0";str.resize(5);
 		file2<<str<<"|";
 		for(int i=0;i<8;i++)
 			getline(file1,str,'|');
@@ -430,11 +453,18 @@ float getSal(string id)
 		cout<<s4<<"Error Occured"<<nl;
 		return 0;
 	}
+	int index=0;
 	while(file){
+		file.seekg(index,ios::beg);
 		getline(file,str,'|');
 		str.resize(8);
-		if(str==id)
+		if(str==id){
 			break;
+		}
+		else{
+			index+=19;
+			str.clear();
+		}
 	}
 	str.clear();
 	getline(file,str,'|');
@@ -455,13 +485,20 @@ void searchLeave()
 		cout<<s4<<"Error Occured"<<nl;
 		return;
 	}
+	int index=0;
 	while(file){
+		file.seekg(index,ios::beg);
 		getline(file,str,'|');
 		str.resize(8);
 		if(str==id){
 			break;
 		}
+		else{
+			index+=100;
+			str.clear();
+		}
 	}
+	int hash = hashed(id[0], id[1], 0);
 	cout<<nl<<"Employee ID\t"<<"Name\t\t"<<"CL(20)\t\t"<<"SL(15)\t\t"<<"STL(10)\t\t"<<"PL(40)\t\t"<<"Salary\t\t"<<"Start Date"<<sp2<<sp2<<"End Date"<<sp2<<sp2<<"NoofLeaves"<<nl<<nl;
 	cout<<str<<"\t";
 	for(int i=0;i<9;i++){
